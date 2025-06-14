@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASHA Time Calculator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background: linear-gradient(to right, #4b6cb7, #182848);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      flex: 1;
+      text-align: left;
+    }
+    #langBtn {
+      background-color: white;
+      color: #4b6cb7;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    .container {
+      background-color: white;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      border-radius: 10px;
+      max-width: 420px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      display: block;
+      margin-top: 1.2rem;
+      font-weight: bold;
+      font-size: 1rem;
+      color: #333;
+    }
+    .date-group {
+      display: flex;
+      gap: 0.4rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    select {
+      flex: 1;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 0.9rem;
+      background-color: #f9f9f9;
+    }
+    button {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 1rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #currentBtn {
+      background-color: #28a745;
+      color: white;
+    }
+    #currentBtn:hover {
+      background-color: #218838;
+    }
+    #calcBtn {
+      background-color: #007bff;
+      color: white;
+    }
+    #calcBtn:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      margin-top: 1.8rem;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #222;
+    }
+    footer {
+      padding: 1rem;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">ASHA Time Calculator</h1>
+    <button id="langBtn">বাংলা</button>
+  </header>
+  <div class="container">
+    <label id="startLabel">Start Date:</label>
+    <div class="date-group">
+      <select id="startDay"></select>
+      <select id="startMonth"></select>
+      <select id="startYear"></select>
+    </div><label id="endLabel">End Date:</label>
+<div class="date-group">
+  <select id="endDay"></select>
+  <select id="endMonth"></select>
+  <select id="endYear"></select>
+</div>
+
+<button onclick="useCurrentDate()" id="currentBtn">Use Current Date & Time</button>
+<button onclick="calculateDiff()" id="calcBtn">Calculate</button>
+
+<div id="result"></div>
+
+  </div>
+  <footer>Created by Tanbir</footer>
+  <script>
+    let lang = 'en';
+    let lastDiff = null;const days = Array.from({ length: 31 }, (_, i) => i + 1);
+const months = Array.from({ length: 12 }, (_, i) => i + 1);
+const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i);
+
+function populate(id, list, label) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">${label}</option>` +
+    list.map(v => `<option value="${v}">${v}</option>`).join('');
+}
+
+function updateLanguage() {
+  document.getElementById("title").innerText = lang === 'en' ? "ASHA Time Calculator" : "আশা টাইম ক্যালকুলেটর";
+  document.getElementById("startLabel").innerText = lang === 'en' ? "Start Date:" : "শুরুর তারিখ:";
+  document.getElementById("endLabel").innerText = lang === 'en' ? "End Date:" : "শেষ তারিখ:";
+  document.getElementById("currentBtn").innerText = lang === 'en' ? "Use Current Date & Time" : "বর্তমান তারিখ ব্যবহার করুন";
+  document.getElementById("calcBtn").innerText = lang === 'en' ? "Calculate" : "হিসেব করুন";
+  document.getElementById("langBtn").innerText = lang === 'en' ? "বাংলা" : "English";
+  populate("startDay", days, lang === 'en' ? "Day" : "দিন");
+  populate("startMonth", months, lang === 'en' ? "Month" : "মাস");
+  populate("startYear", years, lang === 'en' ? "Year" : "বছর");
+  populate("endDay", days, lang === 'en' ? "Day" : "দিন");
+  populate("endMonth", months, lang === 'en' ? "Month" : "মাস");
+  populate("endYear", years, lang === 'en' ? "Year" : "বছর");
+
+  if (lastDiff !== null) {
+    const { weeks, days, hours, mins, secs } = lastDiff;
+    document.getElementById("result").innerText =
+      lang === 'en'
+        ? `${weeks} week${weeks !== 1 ? 's' : ''}, ${days} day${days !== 1 ? 's' : ''}, ${hours}h ${mins}m ${secs}s`
+        : `${weeks} সপ্তাহ, ${days} দিন, ${hours} ঘণ্টা ${mins} মিনিট ${secs} সেকেন্ড`;
+  }
+}
+
+function useCurrentDate() {
+  const now = new Date();
+  document.getElementById("endDay").value = now.getDate();
+  document.getElementById("endMonth").value = now.getMonth() + 1;
+  document.getElementById("endYear").value = now.getFullYear();
+}
+
+function calculateDiff() {
+  const getVal = id => +document.getElementById(id).value;
+  const sd = new Date(getVal("startYear"), getVal("startMonth") - 1, getVal("startDay"));
+  const ed = new Date(getVal("endYear"), getVal("endMonth") - 1, getVal("endDay"));
+  if (isNaN(sd) || isNaN(ed) || ed < sd) return alert(lang === 'en' ? "Invalid dates!" : "তারিখ ভুল হয়েছে!");
+
+  let diff = (ed - sd) / 1000;
+  const weeks = Math.floor(diff / (7 * 86400));
+  diff %= (7 * 86400);
+  const days = Math.floor(diff / 86400);
+  diff %= 86400;
+  const hours = Math.floor(diff / 3600);
+  diff %= 3600;
+  const mins = Math.floor(diff / 60);
+  const secs = Math.floor(diff % 60);
+
+  lastDiff = { weeks, days, hours, mins, secs };
+
+  document.getElementById("result").innerText =
+    lang === 'en'
+      ? `${weeks} week${weeks !== 1 ? 's' : ''}, ${days} day${days !== 1 ? 's' : ''}, ${hours}h ${mins}m ${secs}s`
+      : `${weeks} সপ্তাহ, ${days} দিন, ${hours} ঘণ্টা ${mins} মিনিট ${secs} সেকেন্ড`;
+}
+
+document.getElementById("langBtn").onclick = () => {
+  lang = lang === 'en' ? 'bn' : 'en';
+  updateLanguage();
+};
+
+updateLanguage();
+
+  </script>
+</body>
+</html>
