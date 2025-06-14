@@ -1,0 +1,271 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASHA Time Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      color: #222;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #0077cc;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="date"], input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e0f7fa;
+      border: 1px solid #0077cc;
+    }
+    .lang-toggle {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    .mic-btn {
+      margin-top: 10px;
+      padding: 5px;
+      font-size: 14px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .calendar {
+      margin-top: 20px;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    .calendar th, .calendar td {
+      border: 1px solid #ccc;
+      text-align: center;
+      padding: 8px;
+    }
+    .highlight-start {
+      background-color: #2196f3;
+      color: white;
+    }
+    .highlight-end {
+      background-color: #f44336;
+      color: white;
+    }
+    .highlight-between {
+      background-color: #c8e6c9;
+    }
+  </style>
+</head>
+<body>
+  <div class="lang-toggle">
+    <button onclick="toggleLang()" id="langBtn">বাংলা</button>
+  </div>
+  <h1 id="title">ASHA Time Calculator</h1><label id="startDateLabel">Start Date</label> <input type="date" id="startDate" placeholder="YYYY-MM-DD" /> <input type="text" id="startDateText" placeholder="Type Start Date (e.g. 2025-06-01 or ১ জুন ২০২৫)" onblur="syncTextToDate('startDateText', 'startDate')"> <button class="mic-btn" onclick="startVoice('startDate')">🎤 Speak Start Date</button>
+
+<label id="endDateLabel">End Date</label> <input type="date" id="endDate" placeholder="YYYY-MM-DD" /> <input type="text" id="endDateText" placeholder="Type End Date (e.g. 2025-06-14 or ১৪ জুন ২০২৫)" onblur="syncTextToDate('endDateText', 'endDate')"> <button class="mic-btn" onclick="startVoice('endDate')">🎤 Speak End Date</button> <button onclick="useCurrentDate()" id="useCurrentBtn">Use Current Date</button>
+
+<button onclick="calculateDiff()" id="calculateBtn">Calculate</button>
+
+  <div id="result" class="result" style="display: none;"></div>
+  <div id="calendarView"></div>  <script>
+    let lang = 'en';
+
+    const translations = {
+      en: {
+        title: "ASHA Time Calculator",
+        startDate: "Start Date",
+        endDate: "End Date",
+        calculate: "Calculate",
+        useCurrent: "Use Current Date",
+        speakStart: "🎤 Speak Start Date",
+        speakEnd: "🎤 Speak End Date",
+        langBtn: "বাংলা",
+        diff: "Time Difference:",
+        week: "week",
+        day: "day",
+        hour: "hour",
+        minute: "minute",
+        second: "second"
+      },
+      bn: {
+        title: "আশা টাইম ক্যালকুলেটর",
+        startDate: "শুরুর তারিখ",
+        endDate: "শেষ তারিখ",
+        calculate: "গণনা করুন",
+        useCurrent: "বর্তমান তারিখ ব্যবহার করুন",
+        speakStart: "🎤 শুরু তারিখ বলুন",
+        speakEnd: "🎤 শেষ তারিখ বলুন",
+        langBtn: "English",
+        diff: "সময় পার্থক্য:",
+        week: "সপ্তাহ",
+        day: "দিন",
+        hour: "ঘন্টা",
+        minute: "মিনিট",
+        second: "সেকেন্ড"
+      }
+    };
+
+    function toggleLang() {
+      lang = lang === 'en' ? 'bn' : 'en';
+      const t = translations[lang];
+      document.getElementById("title").innerText = t.title;
+      document.getElementById("startDateLabel").innerText = t.startDate;
+      document.getElementById("endDateLabel").innerText = t.endDate;
+      document.getElementById("calculateBtn").innerText = t.calculate;
+      document.getElementById("useCurrentBtn").innerText = t.useCurrent;
+      document.querySelector(".mic-btn").innerText = t.speakStart;
+      document.querySelectorAll(".mic-btn")[1].innerText = t.speakEnd;
+      document.getElementById("langBtn").innerText = t.langBtn;
+    }
+
+    function useCurrentDate() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("endDate").value = today;
+      document.getElementById("endDateText").value = today;
+    }
+
+    function syncTextToDate(textId, dateId) {
+      const val = document.getElementById(textId).value;
+      const parsed = parseDate(val);
+      if (parsed) {
+        document.getElementById(dateId).value = parsed;
+      }
+    }
+
+    function calculateDiff() {
+      const start = new Date(document.getElementById("startDate").value);
+      const end = new Date(document.getElementById("endDate").value);
+
+      if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) {
+        alert("Please select valid dates.");
+        return;
+      }
+
+      let diff = Math.abs(end - start);
+      let seconds = Math.floor(diff / 1000);
+
+      const weeks = Math.floor(seconds / (7 * 24 * 60 * 60));
+      seconds %= (7 * 24 * 60 * 60);
+
+      const days = Math.floor(seconds / (24 * 60 * 60));
+      seconds %= (24 * 60 * 60);
+
+      const hours = Math.floor(seconds / 3600);
+      seconds %= 3600;
+
+      const minutes = Math.floor(seconds / 60);
+      seconds %= 60;
+
+      const t = translations[lang];
+      const parts = [];
+      if (weeks) parts.push(`${weeks} ${t.week}${weeks > 1 ? 's' : ''}`);
+      if (days) parts.push(`${days} ${t.day}${days > 1 ? 's' : ''}`);
+      if (hours) parts.push(`${hours} ${t.hour}${hours > 1 ? 's' : ''}`);
+      if (minutes) parts.push(`${minutes} ${t.minute}${minutes > 1 ? 's' : ''}`);
+      if (seconds) parts.push(`${seconds} ${t.second}${seconds > 1 ? 's' : ''}`);
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = `<strong>${t.diff}</strong><br>${parts.join('<br>')}`;
+      resultDiv.style.display = "block";
+
+      generateCalendar(start, end);
+    }
+
+    function startVoice(fieldId) {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'bn-BD';
+      recognition.start();
+
+      recognition.onresult = function (event) {
+        const spokenText = event.results[0][0].transcript.trim();
+        const date = parseDate(spokenText);
+        if (date) {
+          document.getElementById(fieldId).value = date;
+          document.getElementById(fieldId + 'Text').value = date;
+        } else {
+          alert("Couldn't understand the date. Please try again.");
+        }
+      };
+    }
+
+    function parseDate(input) {
+      const banglaNums = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      const engNums = ['0','1','2','3','4','5','6','7','8','9'];
+      banglaNums.forEach((b, i) => input = input.replaceAll(b, engNums[i]));
+
+      const months = {
+        'জানুয়ারী': 'January', 'ফেব্রুয়ারী': 'February', 'মার্চ': 'March',
+        'এপ্রিল': 'April', 'মে': 'May', 'জুন': 'June', 'জুলাই': 'July',
+        'আগস্ট': 'August', 'সেপ্টেম্বর': 'September', 'অক্টোবর': 'October',
+        'নভেম্বর': 'November', 'ডিসেম্বর': 'December'
+      };
+      Object.entries(months).forEach(([bn, en]) => input = input.replaceAll(bn, en));
+
+      const parsed = new Date(input);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString().split('T')[0];
+      }
+      return null;
+    }
+
+    function generateCalendar(start, end) {
+      const calendarDiv = document.getElementById("calendarView");
+      calendarDiv.innerHTML = "";
+      if (start > end) [start, end] = [end, start];
+
+      const firstDay = new Date(start.getFullYear(), start.getMonth(), 1);
+      const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+      const startDateStr = start.toISOString().split('T')[0];
+      const endDateStr = end.toISOString().split('T')[0];
+
+      let html = `<table class='calendar'><tr>`;
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      for (let d of days) html += `<th>${d}</th>`;
+      html += `</tr><tr>`;
+
+      for (let i = 0; i < firstDay.getDay(); i++) html += `<td></td>`;
+
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const dateObj = new Date(start.getFullYear(), start.getMonth(), d);
+        const dateStr = dateObj.toISOString().split('T')[0];
+
+        let cls = "";
+        if (dateStr === startDateStr) cls = "highlight-start";
+        else if (dateStr === endDateStr) cls = "highlight-end";
+        else if (dateObj >= start && dateObj <= end) cls = "highlight-between";
+
+        html += `<td class='${cls}'>${d}</td>`;
+
+        if ((dateObj.getDay() + 1) % 7 === 0) html += `</tr><tr>`;
+      }
+
+      html += `</tr></table>`;
+      calendarDiv.innerHTML = html;
+    }
+  </script></body>
+</html>
